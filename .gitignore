@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.pyc
+*.egg-info/
+.venv/
+.pytest_cache/
+build/
+dist/
+
+# Secrets and local configuration
+.env
+.env.*
+src/substream/architectures/m3_agent/configs/api_config.json
+
+# Run artifacts
+runs/
+runs_seq/
+runs_render/
+artifacts/
+wandb/
+
+# Local virtual environments
+envs/
+
+# Generated data and model caches
+*.mp4
+*.npz
+hf_cache/
+
+# Editor and OS
+.DS_Store
+.idea/
+.vscode/
+
+# Never ship pre-edit snapshots
+*.bak
+*.bak.*

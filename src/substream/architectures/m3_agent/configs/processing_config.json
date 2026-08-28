@@ -1,0 +1,7 @@
+{
+    "embedding_model": "Qwen/Qwen3-Embedding-0.6B",
+    "embedding_device": "cuda",
+    "max_control_rounds": 5,
+    "max_memorization_retries": 20,
+    "temperature": 1e-06
+}

@@ -1,0 +1,55 @@
+#!/bin/bash
+# envctl - run a command inside one of the pinned model environments.
+#
+# The evaluated models need mutually incompatible library stacks (see the
+# extras in pyproject.toml), so each stack lives in its own uv virtual
+# environment. This wrapper activates one by name and executes a command:
+#
+#   bin/envctl run full-stack -- substream-eval --model qwen_full ...
+#
+# Environments are directories named <prefix><env_name> under
+# $SUBSTREAM_ENVS_ROOT (default: ./envs next to this repository). Create one
+# with, for example:
+#
+#   uv venv "$SUBSTREAM_ENVS_ROOT/substream-full-stack" && \
+#   VIRTUAL_ENV="$SUBSTREAM_ENVS_ROOT/substream-full-stack" \
+#     uv pip install -e ".[full-stack]"
+
+set -e
+
+if [ "$1" != "run" ]; then
+    echo "Usage: envctl run <env_name> -- <command>" >&2
+    exit 1
+fi
+
+ENV_NAME="$2"
+if [ -z "$ENV_NAME" ]; then
+    echo "Error: environment name required" >&2
+    echo "Usage: envctl run <env_name> -- <command>" >&2
+    exit 1
+fi
+
+shift 2
+if [ "$1" != "--" ]; then
+    echo "Error: expected '--' before command" >&2
+    echo "Usage: envctl run <env_name> -- <command>" >&2
+    exit 1
+fi
+shift
+
+REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+ENV_BASE="${SUBSTREAM_ENVS_ROOT:-${REPO_ROOT}/envs}"
+ENV_PREFIX="${SUBSTREAM_ENVS_PREFIX:-substream-}"
+ENV_DIR="${ENV_BASE}/${ENV_PREFIX}${ENV_NAME}"
+
+if [ ! -d "$ENV_DIR" ]; then
+    echo "Error: environment not found: $ENV_DIR" >&2
+    echo "Available environments:" >&2
+    ls -1 "$ENV_BASE" 2>/dev/null | grep "^${ENV_PREFIX}" | sed "s/^${ENV_PREFIX}/  - /" >&2
+    exit 1
+fi
+
+export VIRTUAL_ENV="$ENV_DIR"
+export PATH="$ENV_DIR/bin:$PATH"
+
+exec "$@"
