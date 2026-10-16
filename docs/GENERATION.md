@@ -5,17 +5,17 @@ rendered videos from scratch.
 
 To reproduce the released synthetic sets in one command each, run the
 `bucket_cli` orchestrator with the paired configs
-`src/substream/generation/configs/bucket_spatial_uniform_eval_tokens.yaml`
+`src/eccbench/generation/configs/bucket_spatial_uniform_eval_tokens.yaml`
 (token streams) and `bucket_spatial_uniform_eval_lanes.yaml` (lane-control
 streams):
 
 ```bash
-python -m substream.generation.seq2vid.bucket_cli generate --config <buckets.yaml> --out-dir runs_seq
-python -m substream.generation.seq2vid.bucket_cli render   --config <buckets.yaml> --sequences-root runs_seq --out-dir runs_render
-python -m substream.generation.seq2vid.bucket_cli manifest --sequences-manifest runs_seq/bucket_generation_manifest.json
+python -m eccbench.generation.seq2vid.bucket_cli generate --config <buckets.yaml> --out-dir runs_seq
+python -m eccbench.generation.seq2vid.bucket_cli render   --config <buckets.yaml> --sequences-root runs_seq --out-dir runs_render
+python -m eccbench.generation.seq2vid.bucket_cli manifest --sequences-manifest runs_seq/bucket_generation_manifest.json
 ```
 
-The pipeline underneath has two stages, in `src/substream/generation/`:
+The pipeline underneath has two stages, in `src/eccbench/generation/`:
 
 - **`vidgeom`** — a geometry-only renderer (no textures). A template YAML
   describes the scene, timing, vocabulary-to-glyph mapping, rules, and
@@ -27,7 +27,7 @@ The pipeline underneath has two stages, in `src/substream/generation/`:
 
 Conveyor renders are letter-only: each token spawns one centered glyph on its
 own frame; belts and lighting stay static. The spatial template
-(`src/substream/generation/examples/template_conveyor_spatial.yaml`) pairs
+(`src/eccbench/generation/examples/template_conveyor_spatial.yaml`) pairs
 the token stream with a dedicated lane-control sequence, so spatial
 (belt-order) questions never change the rendered token order. Registered
 scenes: `conveyor_v2`, `locker_room_v1_geom`, `sorting_hub_v1_geom`,
@@ -65,7 +65,7 @@ buckets add `prefix_clip_path` (and start/end) alongside the usual
 ## Stage 1: generate sequences
 
 ```bash
-python -m substream.generation.seq2vid.gen_cli \
+python -m eccbench.generation.seq2vid.gen_cli \
   --out-dir runs_seq \
   --num-seqs 10 \
   --seq-lens 120 \
@@ -101,13 +101,13 @@ fails fast if the bounds cannot be met within `--max-attempts`.
 ## Stage 2: render videos and questions
 
 ```bash
-python -m substream.generation.seq2vid.render_cli \
-  --template src/substream/generation/examples/template_conveyor_multi.yaml \
+python -m eccbench.generation.seq2vid.render_cli \
+  --template src/eccbench/generation/examples/template_conveyor_multi.yaml \
   --sequences-file runs_seq/sequences.json \
   --out-dir runs_render \
   --num-questions 8 \
   --num-videos 5 \
-  --clip-options \
+  --clip-options --debug-frame-metadata \
   --question-min-len 3 \
   --question-mode exists \
   --log-progress
@@ -120,7 +120,7 @@ Key flags:
 | `--template` | `examples/template_conveyor.yaml` | vidgeom template; declares its required sequence IDs in `sequences: [...]` |
 | `--sequences-file` / `--sequences-root` | — / `runs_seq` | classic single-pool mode vs per-bucket mode |
 | `--num-questions` / `--num-videos` | bucket defaults / no cap | questions per video; cap on videos rendered |
-| `--clip-options` | off | render an mp4 clip per candidate ("yes" = matches the main video; "no" = rerendered distractor) |
+| `--clip-options` | off | render an mp4 clip per candidate ("yes" = matches the main video; "no" = rerendered distractor); needs `--debug-frame-metadata` |
 | `--questions-only` | off | write `questions.json` only, no mp4 rendering (`--clip-options` ignored) |
 | `--question-mode` | exists | `exists` ("did this appear?") or `continuation` ("does this follow the prefix?") |
 | `--questions-at-end` | interspersed | force all questions to reference the full video |

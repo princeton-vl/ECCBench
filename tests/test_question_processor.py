@@ -1,7 +1,7 @@
 """Tests specific to question processing utilities."""
 
-from substream.data.manifest import OptionEntry, QuestionEntry
-from substream.eval.processors.question_processor import QuestionProcessor
+from eccbench.data.manifest import OptionEntry, QuestionEntry
+from eccbench.eval.processors.question_processor import QuestionProcessor
 
 
 class _CaptureModel:

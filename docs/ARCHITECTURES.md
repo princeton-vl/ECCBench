@@ -3,18 +3,13 @@
 This guide shows you how to run the retrieval probe and how to compose and
 evaluate retrieval-augmented evaluation sets.
 
-The registry (`src/substream/registry.py`) distinguishes three subject
-`kind`s: `vlm` (a local checkpoint, e.g. `qwen3_full`), `api` (a
-hosted model, no GPU, e.g. `claude-opus-4-7`), and
-`architecture` (models plus retrieval or memory, e.g. `m3_agent`).
-
-All code lives under `src/substream/architectures/`. RAG is not a registry
+All code lives under `src/eccbench/architectures/`. RAG is not a registry
 entry: it rewrites the *dataset* into shorter retrieval-composed videos,
 which any registry model then evaluates.
 
 ## The retrieval probe
 
-`src/substream/architectures/rag/probe.py` tests whether an off-the-shelf
+`src/eccbench/architectures/rag/probe.py` tests whether an off-the-shelf
 video embedder can localise the queried event in a long video:
 
 - Each L = 512 source video is cut into **16-second windows at stride 4**
@@ -28,10 +23,10 @@ video embedder can localise the queried event in a long video:
 Run the four idempotent stages in order:
 
 ```bash
-python -m substream.architectures.rag.probe [--out runs/retrieval_probe] build   [--seed 0] [--repo ID] [--revision REV]
-python -m substream.architectures.rag.probe [--out runs/retrieval_probe] extract [--jobs 8]
-python -m substream.architectures.rag.probe [--out runs/retrieval_probe] embed   --backend qwen [--batch 8]
-python -m substream.architectures.rag.probe [--out runs/retrieval_probe] score   --backends qwen gve
+python -m eccbench.architectures.rag.probe [--out runs/retrieval_probe] build   [--seed 0] [--repo ID] [--revision REV]
+python -m eccbench.architectures.rag.probe [--out runs/retrieval_probe] extract [--jobs 8]
+python -m eccbench.architectures.rag.probe [--out runs/retrieval_probe] embed   --backend qwen [--batch 8]
+python -m eccbench.architectures.rag.probe [--out runs/retrieval_probe] score   --backends qwen
 ```
 
 `build` downloads the `natural_video` and `synthetic_video` configs of the
@@ -43,18 +38,14 @@ candidate's `clip_start` / `clip_end`. Spans longer than a window are not
 usable. `extract` writes every window as an mp4 via ffmpeg (re-encoded;
 keyframe cuts are not guaranteed at 1 fps); `embed` writes a
 per-video-resumable `.npz` of window and query embeddings; `score` prints
-the table. All state lives under `--out` (default `$SUBSTREAM_RUN_ROOT/retrieval_probe`).
+the table. All state lives under `--out` (default `$ECCBENCH_RUN_ROOT/retrieval_probe`).
 
 ### Retrieval backends
 
 | backend | model | environment | notes |
 |---|---|---|---|
 | `qwen` | Qwen/Qwen3-VL-Embedding-8B | `full-stack` (needs transformers >= 4.57) | last non-pad-token pooling, right padding, L2-normalised; per-video pixel budget capped to 16 frames |
-| `gve` | Alibaba-NLP/GVE-7B | `hf450` (its remote code needs transformers 4.50.x) | last-token pooling, left padding; flash-attention 2 required (the SDPA fallback materialises a whole-batch mask) |
 | `dummy` | random vectors | any | plumbing tests |
-
-The real backends need different environments (`docs/ENVIRONMENTS.md`) —
-hence the staged `.npz` files.
 
 ## Composing a retrieval-augmented evaluation set
 
@@ -63,12 +54,12 @@ per question, take the top-N windows, merge touching or overlapping spans
 chronologically, cut each merged segment from the source video at 1 fps, and
 join segments with a **2-second bright magenta delimiter frame labeled
 "SEGMENT BREAK"**. Output: a standard `questions_dataset.json` (one composed
-video per question) plus media, ready for `substream-eval`.
+video per question) plus media, ready for `eccbench-eval`.
 
 **`compose.py`** uses the probe's manifest and embeddings:
 
 ```bash
-python -m substream.architectures.rag.compose \
+python -m eccbench.architectures.rag.compose \
     --backend qwen --topn 2 --domain both --out runs/rag_qwen_top2 \
     --full-questions [--syn-no-per-video 2] [--embed-missing] [--limit N] \
     [--probe-dir runs/retrieval_probe] [--question-set density_topup] [--density-band all]
@@ -88,28 +79,28 @@ computed (needs a GPU and the backend's environment), cached to a side
 stages:
 
 ```bash
-python -m substream.architectures.rag.pipeline plan    --corpus nat64
-python -m substream.architectures.rag.pipeline extract --corpus nat64 [--jobs 8]
-python -m substream.architectures.rag.pipeline embed   --corpus nat64 [--batch 4]
-python -m substream.architectures.rag.pipeline compose --corpus nat64 [--topn 3]
+python -m eccbench.architectures.rag.pipeline plan    --corpus nat64
+python -m eccbench.architectures.rag.pipeline extract --corpus nat64 [--jobs 8]
+python -m eccbench.architectures.rag.pipeline embed   --corpus nat64 [--batch 4]
+python -m eccbench.architectures.rag.pipeline compose --corpus nat64 [--topn 3]
 ```
 
 `--corpus` is `nat64`/`nat128`/`nat512` (natural, L = 64/128/512; natural
 video has no L = 256 bucket) or `syn64` (synthetic, L = 64, `low` and
 `max-entropy` bands). `plan` prints the work volume; `embed` uses the Qwen
 backend and seeds window and query embeddings from the probe's `.npz` under
-`--probe-dir` (default `$SUBSTREAM_RUN_ROOT/retrieval_probe`) when they
+`--probe-dir` (default `$ECCBENCH_RUN_ROOT/retrieval_probe`) when they
 match; `compose` writes
 `<out-root>/rag_qwen_top{N}_{corpus}/questions_dataset.json` with per-video
 `_rag` provenance (backend, retrieved windows, merged segments, source video
 as its Hub path). Windows and embeddings also live under `--out-root`
-(default `$SUBSTREAM_RUN_ROOT/rag_corpus`). `--question-set`,
+(default `$ECCBENCH_RUN_ROOT/rag_corpus`). `--question-set`,
 `--density-band`, `--repo` and `--revision` are as for `compose.py`.
 
 ### Data
 
 All three scripts read the published dataset through
-`substream.data.hf_loader.fetch` (`docs/DATASET.md`), the same download the
+`eccbench.data.hf_loader.fetch` (`docs/DATASET.md`), the same download the
 evaluation runner uses, so they see the same rows and media. `--repo`
 (default `anonstreammem/substream-recollection`) and `--revision` (default:
 latest) select the copy. Selection is by dataset field:
@@ -135,7 +126,7 @@ Always pass `--rag`, which prepends the disclosure preamble (verbatim in
 `docs/PROTOCOL.md`); without it the model is misled about its input:
 
 ```bash
-substream-eval --data runs/rag_qwen_top2/questions_dataset.json \
+eccbench-eval --data runs/rag_qwen_top2/questions_dataset.json \
     --asset-root runs/rag_qwen_top2 --rag \
     --model qwen3_full --mode video --variant spatial --fps 1
 ```

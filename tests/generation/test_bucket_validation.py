@@ -5,7 +5,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from substream.generation.seq2vid.validate import validate_bucket
+from eccbench.generation.seq2vid.validate import validate_bucket
 
 
 class BucketValidatorTests(unittest.TestCase):
@@ -45,7 +45,7 @@ class BucketValidatorTests(unittest.TestCase):
         ]
         self._write_clip("valid", frames)
         self._write_questions([self._basic_question("valid", ["1", "2"])])
-        with mock.patch("substream.generation.seq2vid.validate._ffprobe_frame_count", return_value=2):
+        with mock.patch("eccbench.generation.seq2vid.validate._ffprobe_frame_count", return_value=2):
             errors = validate_bucket(self.bucket, max_frames=6)
         self.assertFalse(errors)
 
@@ -56,7 +56,7 @@ class BucketValidatorTests(unittest.TestCase):
         ]
         self._write_clip("bad", frames)
         self._write_questions([self._basic_question("bad", ["1", "2"])])
-        with mock.patch("substream.generation.seq2vid.validate._ffprobe_frame_count", return_value=2):
+        with mock.patch("eccbench.generation.seq2vid.validate._ffprobe_frame_count", return_value=2):
             errors = validate_bucket(self.bucket, max_frames=4)
         self.assertTrue(any("missing" in err for err in errors))
 
@@ -71,7 +71,7 @@ class BucketValidatorTests(unittest.TestCase):
             json.dumps({"clip": str(extra), "frames": frames})
         )
         self._write_questions([self._basic_question("main", ["7"])])
-        with mock.patch("substream.generation.seq2vid.validate._ffprobe_frame_count", return_value=1):
+        with mock.patch("eccbench.generation.seq2vid.validate._ffprobe_frame_count", return_value=1):
             errors = validate_bucket(self.bucket, max_frames=4)
         self.assertTrue(any("unexpected option" in err for err in errors))
 

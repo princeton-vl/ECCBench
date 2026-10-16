@@ -1,7 +1,7 @@
 # The published dataset
 
 This guide shows you how to load the published dataset and how to read its
-schema, media layout, and known caveats.
+schema and media layout.
 
 The benchmark is published on the Hugging Face Hub as
 [`anonstreammem/substream-recollection`](https://huggingface.co/datasets/anonstreammem/substream-recollection).
@@ -20,7 +20,7 @@ codec-distortion protocol below).
 |---|---|---|
 | `text` | 7,640 | synthetic substream questions, text modality, L = 8 … 4096 |
 | `synthetic_video` | 6,065 | the same streams rendered as video |
-| `natural_video` | 1,813 | 1,028 EPIC-Kitchens-100 + SoccerNet clips, L = 8 … 1024, two question sets |
+| `natural_video` | 1,726 | 1,015 EPIC-Kitchens-100 and SoccerNet clips, L = 8, 16, 64, 128, 512, 1024, two question sets |
 | `easyhuman` | 672 | 3-belt EasyHuman: 224 video rows (L = 256), 448 text rows (224 at L = 256, 224 at L = 1024); see `modality` |
 
 ## Three encodings
@@ -40,9 +40,12 @@ from datasets import load_dataset
 ds = load_dataset("anonstreammem/substream-recollection", "natural_video")["train"]
 ```
 
-You do not need to download anything by hand for evaluation:
-`substream-eval --data natural_video` downloads and resolves the dataset
-itself (`substream.data.hf_loader.fetch`).
+You do not need to download anything by hand for evaluation.
+`eccbench-eval --data natural_video` first downloads the question files of
+the config. It then downloads the media of the streams that you select with
+`--buckets` and `--limit` (`eccbench.data.hf_loader`). The runner reads
+`manifest.json`, but it keeps only the questions that are also rows of
+`questions.json`.
 
 ## Media join rule
 
@@ -57,9 +60,9 @@ path = f"{root}/{row['media_config']}/{row['video_path']}"   # rows with a non-n
 
 `video_path` is `null` on `text` rows and `easyhuman` text-modality rows.
 
-`media_included` is tri-state: `true` = media published; `false` = NDA-gated
-and absent (provenance-only — some SoccerNet-derived clips); `null` = no gated
-media file. Filter with `media_included != False`, not a truthiness test, or
+`media_included` has three values: `true` = media published; `false` =
+NDA-gated and absent (provenance-only: the 161 SoccerNet rows); `null` = the
+row has no media file. Filter with `media_included != False`, not a truthiness test, or
 `null` rows drop too; the runner skips provenance-only rows itself.
 
 ## Keys and question sets
@@ -69,12 +72,12 @@ media file. Filter with `media_included != False`, not a truthiness test, or
 `easyhuman`. **`question_id` alone is not unique**: synthetic questions recur
 across lengths and bands; ids are unique only within a question set.
 
-`natural_video` holds two disjoint question sets over the same 1,028 clips:
+`natural_video` holds two disjoint question sets over the same 1,015 clips:
 
 | `question_set` | rows | what it asks |
 |---|---|---|
-| `designed` | 1,028 | the question the clip was built for, at every length L = 8 … 1024 |
-| `density_topup` | 785 | mined questions about *other* event classes on the 403 codec-banded clips (L = 64 … 1024), for the density analysis |
+| `designed` | 1,007 | the question the clip was built for, at every length |
+| `density_topup` | 719 | mined questions about *other* event classes on 377 codec-banded clips (L = 64 … 1024), for the density analysis |
 
 They share no `question_id`; no clip is asked the same question twice.
 
@@ -86,9 +89,9 @@ in DINOv2 embedding space against the original), using **one global cutoff**
 held constant at every stream length; the band is a property of the video,
 uniform across its questions.
 
-`density_band` is `null` on the 504 `designed` rows at L = 8/16 (no band
-assigned at L = 8/16) and on 121 unbanded clips at higher lengths —
-625 null `designed` rows total.
+`density_band` is `null` on the 496 `designed` rows at L = 8 and 16 (no band
+is assigned at these lengths) and on 117 unbanded rows at higher lengths:
+613 `null` rows in total, all in `designed`.
 
 Other columns:
 
@@ -98,19 +101,20 @@ Other columns:
 | `event_clip_start`, `event_clip_end` | same instants in seconds; clips are 1 fps, frame = `floor(seconds)` |
 | `event_timing` | `measured` (EPIC: extent from narration) or `centered_by_construction` (SoccerNet: clip centred on the labelled instant, nominal 2 s window) |
 | `clip_sha256` | sha256 of the published mp4; `null` where NDA-gated |
-| `label_source` | `designed`, or `narration_margin` / `whole_video_absence` / `labels_v2_window` / `labels_v2_window_absence` for mined questions |
+| `label_source` | `designed`, or `narration_margin` / `whole_video_absence` / `labels_v2_window` / `labels_v2_window_absence` for mined questions; `annotation_corrected` where the answer was checked against the source annotations and corrected |
+| `in_density_comparison`, `in_calibration`, `in_rag_comparison` | whether the paper's density, calibration or retrieval comparison uses the question |
 | `query_class` | the event class this question asks about |
 | `question_time` | question position in clip seconds; always `length_L` |
 | `source_provenance` | JSON: source video id, clip/event positions, slowdown factor, SoccerNet match metadata |
 
-The event columns localise the **clip's** designed event, the question's
-subject only when `question_set == "designed"`; for `density_topup` rows,
-check `event_type` against `query_class` first.
+The event columns give the position of the **clip's** designed event. This
+is the subject of the question only when `question_set == "designed"`. For
+`density_topup` rows, compare `event_type` with `query_class` first.
 
-## Licences
+## Licenses
 
-Synthetic and EasyHuman content is CC BY 4.0; EPIC-Kitchens-100-derived clips
-CC BY-NC 4.0; SoccerNet rows provenance-only under the SoccerNet NDA.
-Each row carries a `license` column; full texts ship in `LICENSES/`. Cite
+Synthetic and EasyHuman content is CC BY 4.0. EPIC-Kitchens-100 clips are
+CC BY-NC 4.0. SoccerNet rows are provenance-only under the SoccerNet NDA.
+Each row has a `license` column, and the full texts are in `LICENSES/`. Cite
 EPIC-KITCHENS-100 (Damen et al., IJCV 2022) and SoccerNet (Giancola et al.,
-CVPR Workshops 2018) alongside the benchmark.
+CVPR Workshops 2018) together with the benchmark.

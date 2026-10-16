@@ -8,14 +8,13 @@ if not hasattr(torch, "ones"):
 pytest.importorskip("cv2")
 pytest.importorskip("qwen_vl_utils")
 
-from substream.samplers.qwen_sampler import QwenFrameSampler  # noqa: E402
+from eccbench.samplers.qwen_sampler import QwenFrameSampler  # noqa: E402
 
 
 def test_resolve_video_path_prefers_largest_candidate(tmp_path):
     """When the canonical asset is missing, use the largest matching variant."""
 
     missing_path = tmp_path / "pattern_video.mp4"
-    # Ensure the original file is absent
     assert not missing_path.exists()
 
     candidate_small = tmp_path / "pattern_video_1fps_256.mp4"

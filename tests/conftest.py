@@ -1,13 +1,7 @@
-"""Pytest configuration for the substream test suite.
+"""Make ``src/`` importable, and stub torch when it is not installed.
 
-Two jobs:
-
-1. Make ``src/`` importable so the tests run against the checkout without
-   requiring ``pip install -e .``.
-2. On CPU-only environments where torch is not installed, register a minimal
-   torch stub so the pure-python modules (which import torch at module level)
-   can be exercised. When the real torch is importable (e.g. inside the GPU
-   envs driven by ``bin/envctl``) nothing is stubbed.
+The stub lets the pure-Python modules that import torch at module level run
+in a base install. When torch is installed, nothing is stubbed.
 """
 
 import importlib.util

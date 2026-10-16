@@ -6,10 +6,13 @@ from typing import List
 
 import numpy as np
 
-from substream.generation.rule_discovery.entropy import analytic_entropy
-from substream.generation.rule_discovery.simulate import build_lz_causal_cache, lz_entropy_rate_causal
-from substream.generation.rule_discovery.rules import Rule, make_base_probs
-from substream.generation.rule_discovery.automaton import RuleAutomaton
+from eccbench.generation.rule_discovery.automaton import RuleAutomaton
+from eccbench.generation.rule_discovery.entropy import analytic_entropy
+from eccbench.generation.rule_discovery.rules import Rule, make_base_probs
+from eccbench.generation.rule_discovery.simulate import (
+    build_lz_causal_cache,
+    lz_entropy_rate_causal,
+)
 
 
 class AnalyticEntropyTests(unittest.TestCase):

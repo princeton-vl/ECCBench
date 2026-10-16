@@ -1,7 +1,7 @@
 """Tests for conveyor token scheduling."""
 import numpy as np
 
-from substream.generation.vidgeom.engine import _build_token_schedule, _Scheduler
+from eccbench.generation.vidgeom.engine import _build_token_schedule, _Scheduler
 
 
 def _collect_events(scheduler: _Scheduler, seq_id: str):

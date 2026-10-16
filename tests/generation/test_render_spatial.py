@@ -5,13 +5,13 @@ from pathlib import Path
 
 import numpy as np
 
-from substream.generation.seq2vid.render import (
+from eccbench.generation.seq2vid.render import (
     QuestionContext,
     _build_entropy_cache_map,
-    _contains_joint_subsequence,
-    _contains_subsequence,
     _build_exists_question,
     _collect_continuations,
+    _contains_joint_subsequence,
+    _contains_subsequence,
     _ngram_counts,
 )
 

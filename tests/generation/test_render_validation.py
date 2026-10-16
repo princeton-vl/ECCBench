@@ -8,26 +8,25 @@ from typing import Any, Dict, List, Optional, Sequence
 
 import numpy as np
 
-from substream.generation.seq2vid.render import (
+import eccbench.generation
+from eccbench.generation.seq2vid.render import (
     QuestionContext,
+    _clip_frames_match_video,
+    _durations,
     _prepare_letter_rendering,
     _render_true_slice_clip,
     _resolve_media_path,
     _write_clip_frame_debug,
     _write_frame_debug,
     _write_validation_manifest,
-    _clip_frames_match_video,
     run_render,
-    _durations,
 )
-from substream.generation.seq2vid.simple_letter_renderer import render_sequence_frames
-from substream.generation.vidgeom import load_template
-import substream.generation
+from eccbench.generation.seq2vid.simple_letter_renderer import render_sequence_frames
+from eccbench.generation.vidgeom import load_template
 
-# The template ships inside the package; resolve it from the package location
-# so the tests pass regardless of the pytest working directory.
+# Resolve the template from the package so the working directory does not matter.
 TEMPLATE_PATH = (
-    Path(substream.generation.__file__).resolve().parent
+    Path(eccbench.generation.__file__).resolve().parent
     / "examples"
     / "template_conveyor_letters.yaml"
 )
@@ -395,7 +394,7 @@ class RenderIntegrationTests(unittest.TestCase):
         self.assertTrue(frames, f"No frame metadata for {clip_path}")
         tokens = [str(tok) for tok in candidate.get("sequences", {}).get("S_tokens", [])]
         lanes_seq = candidate.get("sequences", {}).get("S_lanes")
-        lanes = [str(l) for l in lanes_seq] if lanes_seq else None
+        lanes = [str(lane) for lane in lanes_seq] if lanes_seq else None
         for frame in frames:
             items = frame.get("items", [])
             self.assertLessEqual(len(items), 8)

@@ -4,9 +4,9 @@ from pathlib import Path
 
 import pytest
 
-from substream.generation.seq2vid.buckets import BucketSpec, StepProfile
-from substream.generation.seq2vid.gen_cli import _validate_bucket_specs
-from substream.generation.seq2vid.generate import run_generation
+from eccbench.generation.seq2vid.buckets import BucketSpec
+from eccbench.generation.seq2vid.gen_cli import _validate_bucket_specs
+from eccbench.generation.seq2vid.generate import run_generation
 
 
 def test_uniform_generation_hits_upper_bound(tmp_path: Path) -> None:

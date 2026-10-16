@@ -1,7 +1,7 @@
 """Tests for the sequence-mode processor utilities."""
 
-from substream.data.manifest import OptionEntry, QuestionEntry
-from substream.eval.processors.sequence_processor import (
+from eccbench.data.manifest import OptionEntry, QuestionEntry
+from eccbench.eval.processors.sequence_processor import (
     CommaSeparatedSequenceFormatter,
     SequenceProcessor,
 )

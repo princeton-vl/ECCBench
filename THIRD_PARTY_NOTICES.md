@@ -21,29 +21,13 @@ cross-referenced from the relevant entries below rather than duplicated.
 - **License:** Apache License 2.0
 - **In-tree LICENSE:** `external/LongVILA/LICENSE`
 
-### `external/TimeChat/`
-
-- **Upstream:** yaolinli/TimeChat-Online — https://github.com/yaolinli/TimeChat-Online
-  (the Qwen2.5-VL fork with token dropping, `modeling_qwen2_5_vl_DTD.py`,
-  used for the `wyccccc/TimeChatOnline-7B` checkpoint)
-- **License:** BSD 3-Clause (Copyright 2025, LANCO @ Peking University)
-- **In-tree LICENSE:** `external/TimeChat/LICENSE` (copy at
-  `external_licenses/TimeChat-Online.LICENSE`)
-
-### `external/TimeChat/qwen2_5_vl/`
-
-- **Upstream:** Qwen2.5-VL reference modeling code from `huggingface/transformers`
-  (https://github.com/huggingface/transformers/tree/main/src/transformers/models/qwen2_5_vl)
-- **License:** Apache License 2.0 (Copyright 2018- The Hugging Face team)
-- **In-tree LICENSE:** `external/TimeChat/qwen2_5_vl/LICENSE`
-
-### `src/substream/backbones/backend/models/external/ttt_fast/ThunderKittens/`
+### `src/eccbench/backbones/backend/models/external/ttt_fast/ThunderKittens/`
 
 - **Upstream:** HazyResearch/ThunderKittens — https://github.com/HazyResearch/ThunderKittens
 - **License:** MIT License (Copyright 2024 HazyResearch)
-- **In-tree LICENSE:** `src/substream/backbones/backend/models/external/ttt_fast/ThunderKittens/LICENSE`
+- **In-tree LICENSE:** `src/eccbench/backbones/backend/models/external/ttt_fast/ThunderKittens/LICENSE`
 
-### `src/substream/backbones/backend/models/external/ttt_fast/` (parent module)
+### `src/eccbench/backbones/backend/models/external/ttt_fast/` (parent module)
 
 - **Upstream provenance:** Derivative of `test-time-training/ttt-lm-pytorch`
   (MIT). The upstream `ttt.py` defines the TTT primitive that
@@ -55,7 +39,13 @@ cross-referenced from the relevant entries below rather than duplicated.
   and `external_licenses/mamba.LICENSE` (Apache 2.0) for the respective
   derivative portions.
 
-### `src/substream/generation/`
+### `src/eccbench/architectures/retrieval/qwen3_vl_embedding.py`
+
+- **Upstream:** the `Qwen3VLEmbedder` wrapper from the Qwen/Qwen3-VL-Embedding-8B
+  model card — https://huggingface.co/Qwen/Qwen3-VL-Embedding-8B
+- **License:** Apache License 2.0
+
+### `src/eccbench/generation/`
 
 - **Origin:** First-party. The `generation/vidgeom/` package and the
   `generation/seq2vid/` CLI suite are authored as part of this work and
@@ -63,7 +53,7 @@ cross-referenced from the relevant entries below rather than duplicated.
 
 ---
 
-## Single-file vendored modules under `src/substream/backbones/backend/models/external/`
+## Single-file vendored modules under `src/eccbench/backbones/backend/models/external/`
 
 Individual `.py` files copied or adapted from upstream projects. Each
 upstream `LICENSE` is included once at the listed path in
@@ -85,8 +75,6 @@ upstream `LICENSE` is included once at the listed path in
 ```
 LICENSE                                                              # MIT, first-party
 external/LongVILA/LICENSE                                            # Apache 2.0
-external/TimeChat/LICENSE                                            # BSD 3-Clause
-external/TimeChat/qwen2_5_vl/LICENSE                                 # Apache 2.0
 external_licenses/
   ├── compressive-transformer-pytorch.LICENSE                        # MIT
   ├── flash-linear-attention.LICENSE                                 # MIT
@@ -94,9 +82,8 @@ external_licenses/
   ├── MemoryMosaics.LICENSE                                          # Apache 2.0
   ├── nanoGPT.LICENSE                                                # MIT
   ├── SAM.LICENSE                                                    # MIT
-  ├── TimeChat-Online.LICENSE                                        # BSD 3-Clause
   ├── ttt-lm-pytorch.LICENSE                                         # MIT
   └── xformers.LICENSE                                               # BSD 3-Clause
-src/substream/backbones/backend/models/external/ttt_fast/
+src/eccbench/backbones/backend/models/external/ttt_fast/
   └── ThunderKittens/LICENSE                                         # MIT
 ```

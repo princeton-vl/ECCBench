@@ -13,10 +13,8 @@ pl = pytest.importorskip("pytorch_lightning")
 
 pytestmark = pytest.mark.gpu
 
-# Backends whose forward pass has extra input requirements: floating dtype,
-# stream-boundary metadata, a chunk-aligned sequence length, or a registry
-# override (log_linear_mamba's default state_size of 32 violates its own
-# kernel's divisible-by-64 requirement, so runs always override it).
+# Backends with extra input needs. log_linear_mamba's kernel needs a
+# state_size divisible by 64, so its default of 32 is overridden.
 SPECIAL = {
     "deltaformer": {"dtype": "bf16"},
     "dnc": {"stream_len": 8},
@@ -30,7 +28,7 @@ OPTIONAL_EXTENSION = {"ttt_fast"}
 
 
 def _backend_names():
-    from substream.backbones.training.registries import BACKEND_SPECS
+    from eccbench.backbones.training.registries import BACKEND_SPECS
 
     return sorted(BACKEND_SPECS)
 
@@ -39,8 +37,8 @@ def _backend_names():
 def test_backend_forward(name):
     if not torch.cuda.is_available():
         pytest.skip("needs a GPU")
-    from substream.backbones.backend.models.backend_base import SequenceInputs
-    from substream.backbones.training.registries import build_backend
+    from eccbench.backbones.backend.models.backend_base import SequenceInputs
+    from eccbench.backbones.training.registries import build_backend
 
     special = SPECIAL.get(name, {})
     try:
