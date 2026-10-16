@@ -10,7 +10,6 @@ dist/
 # Secrets and local configuration
 .env
 .env.*
-src/substream/architectures/m3_agent/configs/api_config.json
 
 # Run artifacts
 runs/

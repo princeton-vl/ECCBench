@@ -2,7 +2,7 @@
 
 import csv
 
-from substream.data.csv_log import QUESTION_LOG_HEADERS, write_question_log_csv
+from eccbench.data.csv_log import QUESTION_LOG_HEADERS, write_question_log_csv
 
 
 def test_write_question_log_csv(tmp_path):

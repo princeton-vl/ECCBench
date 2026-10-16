@@ -2,14 +2,14 @@
 
 This guide shows you what a model sees during a run and how the calibration
 (abstention-pricing) conditions work. Every prompt below is verbatim from the
-source of truth, `src/substream/eval/processors/question_processor.py`.
+source of truth, `src/eccbench/eval/processors/question_processor.py`.
 
 ## The task
 
-Run an evaluation with `substream-eval`:
+Run an evaluation with `eccbench-eval`:
 
 ```bash
-substream-eval --data natural_video --model qwen3_full --mode video --variant spatial
+eccbench-eval --data natural_video --model qwen3_full --mode video --variant spatial
 ```
 
 - `--data` accepts a Hub config name (`text`, `synthetic_video`,
@@ -23,8 +23,9 @@ sequence, rendered synthetic video, or natural clip), a short candidate (for
 natural video, a question about an action), and whether it occurred inside
 the stream. Answers are binary with an explicit abstain option in curly
 braces: `{0}` / `{1}` / `{2}` (`{uncertain}` on natural video). A response
-with no parseable answer extracts as `2` — see "Abstention versus failure to
-answer".
+with no parseable answer counts as `2`, an abstention. The calibration
+section below explains why you must read coverage together with response
+length.
 
 ## Exact prompts
 
@@ -95,8 +96,8 @@ exactly the items arm B declines, so selectivity is read from the paired
 runs — run the same cell twice:
 
 ```bash
-substream-eval --data natural_video --model qwen3_full --arm A --name calibA_myrun
-substream-eval --data natural_video --model qwen3_full --arm B --name calibB_myrun
+eccbench-eval --data natural_video --model qwen3_full --arm A --name calibA_myrun
+eccbench-eval --data natural_video --model qwen3_full --arm B --name calibB_myrun
 ```
 
 One failure mode remains: low coverage caused by output degeneration, not
@@ -130,5 +131,5 @@ on the question's first word.
 ## Frame geometry
 
 Frames are decoded at 1 fps for natural video. Per-model frame sizes are set
-by each model's sampler under `src/substream/samplers/`; per-model video
-length caps are `max_video_bucket` in `src/substream/registry.py`.
+by each model's sampler under `src/eccbench/samplers/`; per-model video
+length caps are `max_video_bucket` in `src/eccbench/registry.py`.

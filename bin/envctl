@@ -5,14 +5,14 @@
 # extras in pyproject.toml), so each stack lives in its own uv virtual
 # environment. This wrapper activates one by name and executes a command:
 #
-#   bin/envctl run full-stack -- substream-eval --model qwen_full ...
+#   bin/envctl run full-stack -- eccbench-eval --model qwen_full ...
 #
 # Environments are directories named <prefix><env_name> under
-# $SUBSTREAM_ENVS_ROOT (default: ./envs next to this repository). Create one
+# $ECCBENCH_ENVS_ROOT (default: ./envs next to this repository). Create one
 # with, for example:
 #
-#   uv venv "$SUBSTREAM_ENVS_ROOT/substream-full-stack" && \
-#   VIRTUAL_ENV="$SUBSTREAM_ENVS_ROOT/substream-full-stack" \
+#   uv venv "$ECCBENCH_ENVS_ROOT/eccbench-full-stack" && \
+#   VIRTUAL_ENV="$ECCBENCH_ENVS_ROOT/eccbench-full-stack" \
 #     uv pip install -e ".[full-stack]"
 
 set -e
@@ -38,8 +38,8 @@ fi
 shift
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-ENV_BASE="${SUBSTREAM_ENVS_ROOT:-${REPO_ROOT}/envs}"
-ENV_PREFIX="${SUBSTREAM_ENVS_PREFIX:-substream-}"
+ENV_BASE="${ECCBENCH_ENVS_ROOT:-${REPO_ROOT}/envs}"
+ENV_PREFIX="${ECCBENCH_ENVS_PREFIX:-eccbench-}"
 ENV_DIR="${ENV_BASE}/${ENV_PREFIX}${ENV_NAME}"
 
 if [ ! -d "$ENV_DIR" ]; then

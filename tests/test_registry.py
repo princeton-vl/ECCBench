@@ -1,32 +1,28 @@
-"""Static well-formedness checks for the model registry.
+"""Static checks of the model registry.
 
-Registry entries point at modules that need torch/GPU stacks, so this file
-does not import them. It only validates the spec fields statically, plus the
-one intentionally lightweight entry (``dummy_eval``) which must import and
-instantiate without a GPU.
+Model modules need GPU stacks, so only ``dummy_eval`` is imported.
 """
 
 from pathlib import Path
 
 import pytest
 
-from substream.registry import REGISTRY, load_model_class
+from eccbench.registry import REGISTRY, load_model_class
 
 SRC_DIR = Path(__file__).resolve().parents[1] / "src"
-SAMPLERS_DIR = SRC_DIR / "substream" / "samplers"
+SAMPLERS_DIR = SRC_DIR / "eccbench" / "samplers"
 
-VALID_ENVS = {"full-stack", "hf448", "hf450", "hf451", "api"}
-VALID_KINDS = {"vlm", "api", "architecture"}
+VALID_ENVS = {"full-stack", "hf448", "hf450", "api"}
+VALID_KINDS = {"vlm", "api"}
 
 
 @pytest.mark.parametrize("alias", sorted(REGISTRY))
 def test_registry_spec_is_well_formed(alias):
     spec = REGISTRY[alias]
 
-    assert spec.module.startswith("substream."), (
-        f"{alias}: module {spec.module!r} must live in the substream package"
+    assert spec.module.startswith("eccbench."), (
+        f"{alias}: module {spec.module!r} must live in the eccbench package"
     )
-    # The module string must map to an actual file (or package) under src/.
     module_path = SRC_DIR / Path(*spec.module.split("."))
     assert module_path.with_suffix(".py").exists() or (module_path / "__init__.py").exists(), (
         f"{alias}: module {spec.module!r} has no file under src/"

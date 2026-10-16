@@ -3,7 +3,7 @@ import unittest
 
 import numpy as np
 
-from substream.generation.vidgeom.assets import assign_unique_token_colors
+from eccbench.generation.vidgeom.assets import assign_unique_token_colors
 
 
 class UniqueColorFallbackTests(unittest.TestCase):

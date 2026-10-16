@@ -1,19 +1,9 @@
-"""CPU tests for the ``substream.backbones`` package.
+"""CPU tests for ``eccbench.backbones``.
 
-Designed to stay green in the ``full-stack`` env, which has real torch but
-none of the heavier backbone deps (lightning, fla, mamba-ssm, dnc,
-titans-pytorch). Anything beyond plain torch is guarded with
-``pytest.importorskip`` / graceful skips so ``pytest tests/`` never breaks:
-
-* registry sanity tests skip when the registry module cannot import (it pulls
-  in fla/dnc/titans at module level);
-* pure-torch backends (identity, simple_rnn, transformer_pp,
-  compressive_transformer, memory_mosaic) are constructed directly from their
-  model modules and run a tiny CPU forward pass;
-* kernel/dependency-bound backends (dnc, stm via the ``dnc`` package) skip
-  cleanly when their import fails;
-* a boundary test asserts backbones only imports substream.backbones and
-  substream.config from the substream namespace.
+Tests that need more than plain torch (lightning, fla, mamba-ssm, dnc,
+titans-pytorch) skip when those packages are missing. The pure-torch backends
+run a small forward pass. A boundary test checks that the backbones import
+only ``eccbench.backbones`` and ``eccbench.config`` from the package.
 """
 
 from __future__ import annotations
@@ -28,7 +18,7 @@ torch = pytest.importorskip("torch")
 if not hasattr(torch, "randn"):  # conftest stub on torch-less envs
     pytest.skip("real torch is required for backbone tests", allow_module_level=True)
 
-BACKBONES_ROOT = Path(__file__).resolve().parents[1] / "src" / "substream" / "backbones"
+BACKBONES_ROOT = Path(__file__).resolve().parents[1] / "src" / "eccbench" / "backbones"
 
 
 def _import_or_skip(module_name: str):
@@ -49,7 +39,7 @@ class TestRegistries:
 
     @pytest.fixture(scope="class")
     def registries(self):
-        return _import_or_skip("substream.backbones.training.registries")
+        return _import_or_skip("eccbench.backbones.training.registries")
 
     def test_backend_specs_well_formed(self, registries):
         assert registries.BACKEND_SPECS, "BACKEND_SPECS must not be empty"
@@ -62,7 +52,7 @@ class TestRegistries:
             assert all(isinstance(k, str) for k in spec.required_keys)
 
     def test_dataset_specs_well_formed(self, registries):
-        assert set(registries.DATASET_SPECS) >= {"synthetic", "file", "video_features"}
+        assert set(registries.DATASET_SPECS) >= {"synthetic", "file"}
         for key, spec in registries.DATASET_SPECS.items():
             assert spec.name == key
             assert callable(spec.builder)
@@ -89,22 +79,22 @@ class TestRegistries:
 # name -> (module, class, tiny constructor kwargs)
 _CPU_BACKENDS = {
     "identity": (
-        "substream.backbones.backend.models.identity",
+        "eccbench.backbones.backend.models.identity",
         "IdentityBackend",
         {"embed_dim": 16},
     ),
     "simple_rnn": (
-        "substream.backbones.backend.models.simple_rnn",
+        "eccbench.backbones.backend.models.simple_rnn",
         "SimpleRNNEncoder",
         {"embed_dim": 16, "hidden_dim": 32, "num_layers": 2, "dropout": 0.0},
     ),
     "transformer_pp": (
-        "substream.backbones.backend.models.transformer_pp_backend",
+        "eccbench.backbones.backend.models.transformer_pp_backend",
         "TransformerPPBackend",
         {"embed_dim": 16, "num_layers": 1, "num_heads": 2, "mlp_ratio": 2, "dropout": 0.0},
     ),
     "compressive_transformer": (
-        "substream.backbones.backend.models.lt_ct",
+        "eccbench.backbones.backend.models.lt_ct",
         "CompressiveTransformerBackend",
         {
             "embed_dim": 16,
@@ -118,7 +108,7 @@ _CPU_BACKENDS = {
         },
     ),
     "memory_mosaic": (
-        "substream.backbones.backend.models.memory_mosaic_backend",
+        "eccbench.backbones.backend.models.memory_mosaic_backend",
         "MemoryMosaicBackend",
         {
             "embed_dim": 16,
@@ -133,12 +123,12 @@ _CPU_BACKENDS = {
     # mann.py imports the optional `dnc` package at module level, so both of
     # these skip in envs without it (e.g. full-stack).
     "stm": (
-        "substream.backbones.backend.models.mann",
+        "eccbench.backbones.backend.models.mann",
         "STMBackend",
         {"embed_dim": 16, "segment_length": 4, "stm_input_dim": 8, "segmentation_method": "avg"},
     ),
     "dnc": (
-        "substream.backbones.backend.models.mann",
+        "eccbench.backbones.backend.models.mann",
         "DNCBackend",
         {
             "embed_dim": 16,
@@ -156,7 +146,7 @@ _CPU_BACKENDS = {
 
 
 def _tiny_sequence_inputs(embed_dim: int):
-    base_mod = _import_or_skip("substream.backbones.backend.models.backend_base")
+    base_mod = _import_or_skip("eccbench.backbones.backend.models.backend_base")
     batch, length = 2, 12
     torch.manual_seed(0)
     return base_mod.SequenceInputs(
@@ -187,8 +177,8 @@ def test_backend_cpu_forward(backend_name):
 
 
 def test_backend_base_padding_mask_from_lengths():
-    base_mod = _import_or_skip("substream.backbones.backend.models.backend_base")
-    identity_mod = _import_or_skip("substream.backbones.backend.models.identity")
+    base_mod = _import_or_skip("eccbench.backbones.backend.models.backend_base")
+    identity_mod = _import_or_skip("eccbench.backbones.backend.models.identity")
     backend = identity_mod.IdentityBackend(embed_dim=4)
     inputs = base_mod.SequenceInputs(
         input_ids=torch.ones(2, 5, dtype=torch.long),
@@ -208,8 +198,8 @@ def test_backend_base_padding_mask_from_lengths():
 
 
 def test_synthetic_dataset_and_collate():
-    seq_gen = _import_or_skip("substream.backbones.data.sequences.sequence_generator")
-    collator = _import_or_skip("substream.backbones.data.sequences.collator")
+    seq_gen = _import_or_skip("eccbench.backbones.data.sequences.sequence_generator")
+    collator = _import_or_skip("eccbench.backbones.data.sequences.collator")
 
     dataset = seq_gen.SyntheticSequenceDataset(
         num_sequences=4,
@@ -238,11 +228,11 @@ def test_synthetic_dataset_and_collate():
 
 
 # ---------------------------------------------------------------------------
-# boundary: backbones must not depend on the rest of substream
+# boundary: backbones must not depend on the rest of eccbench
 # ---------------------------------------------------------------------------
 
-_ALLOWED_SUBSTREAM_IMPORTS = {"backbones", "config"}
-_IMPORT_RE = re.compile(r"^\s*(?:from|import)\s+substream\.(\w+)", re.MULTILINE)
+_ALLOWED_ECCBENCH_IMPORTS = {"backbones", "config"}
+_IMPORT_RE = re.compile(r"^\s*(?:from|import)\s+eccbench\.(\w+)", re.MULTILINE)
 
 
 def test_backbones_import_boundary():
@@ -251,6 +241,6 @@ def test_backbones_import_boundary():
     for path in BACKBONES_ROOT.rglob("*.py"):
         for match in _IMPORT_RE.finditer(path.read_text(encoding="utf-8")):
             subpackage = match.group(1)
-            if subpackage not in _ALLOWED_SUBSTREAM_IMPORTS:
-                violations.append(f"{path}: substream.{subpackage}")
-    assert not violations, "backbones may only import substream.backbones/config:\n" + "\n".join(violations)
+            if subpackage not in _ALLOWED_ECCBENCH_IMPORTS:
+                violations.append(f"{path}: eccbench.{subpackage}")
+    assert not violations, "backbones may only import eccbench.backbones/config:\n" + "\n".join(violations)

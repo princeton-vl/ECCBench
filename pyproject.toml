@@ -1,5 +1,5 @@
 [project]
-name = "substream"
+name = "eccbench"
 version = "1.0.0"
 description = "Good Memory has ECC: evaluating the memory of vision-language models beyond accuracy"
 readme = "README.md"
@@ -15,18 +15,21 @@ dependencies = [
 ]
 
 [project.scripts]
-substream-eval = "substream.eval.runner:main"
+eccbench-eval = "eccbench.eval.runner:main"
 
 [project.optional-dependencies]
-# API-backed subject models (Claude, and any OpenRouter-served model). The
-# evaluation runner also needs torch, pillow, and opencv for its shared video
-# plumbing, even though API models run no local inference.
+# Hosted models (Claude, OpenRouter) and the dummy model. The runner's video
+# path also needs torch, torchvision, pillow, opencv, qwen-vl-utils and decord
+# to sample frames.
 api = [
   "anthropic",
   "openai",
   "torch",
   "pillow",
   "opencv-python-headless",
+  "qwen-vl-utils",
+  "torchvision",
+  "decord",
 ]
 
 dev = [
@@ -35,7 +38,7 @@ dev = [
 ]
 
 # Training and evaluating the small alternative-architecture backbones
-# (substream.backbones). Pins follow the environment the published backbone
+# (eccbench.backbones). Pins follow the environment the published backbone
 # results were trained in.
 backbones = [
   # torch 2.9 is the last CUDA 12.x generation, matching the prebuilt
@@ -78,6 +81,7 @@ hf448 = [
   "evaluate==0.4.3",
   "sacrebleu==2.5.1",
   "qwen-vl-utils",
+  "decord",
 ]
 
 hf450 = [
@@ -90,35 +94,14 @@ hf450 = [
   "flash-attn @ https://github.com/mjun0812/flash-attention-prebuild-wheels/releases/download/v0.4.17/flash_attn-2.8.3+cu128torch2.9-cp311-cp311-linux_x86_64.whl",
 ]
 
-hf451 = [
-  "setuptools-scm",
-  "torchdiffeq",
-  "resampy",
-  "x-transformers",
-  "accelerate==0.34.2",
-  "ninja",
-  "flash-attn @ https://github.com/mjun0812/flash-attention-prebuild-wheels/releases/download/v0.0.8/flash_attn-2.7.4.post1+cu124torch2.6-cp311-cp311-linux_x86_64.whl",
-  "torch==2.6.0",
-  "torchvision==0.21.0",
-  "torchaudio==2.6.0",
-  "peft==0.15.2",
-  "moviepy==2.1.2",
-  "httpx==0.23.0",
-  "pydub==0.25.1",
-  "trl==0.16.0",
-  "onnxruntime-gpu",
-  "insightface==0.7.3",
-  "hdbscan==0.8.40",
-  "transformers==4.52",
-  "vllm==0.8.4",
-  "numpy",
-]
-
 full-stack = [
   "transformers @ git+https://github.com/huggingface/transformers@f028e9340cca466a64592dbea542d3bdd2c89d5e",
   "flash-attn @ https://github.com/mjun0812/flash-attention-prebuild-wheels/releases/download/v0.4.11/flash_attn-2.8.3+cu128torch2.8-cp311-cp311-linux_x86_64.whl",
   "vllm>=0.10.2",
   "qwen-vl-utils>=0.0.14",
+  "qwen-omni-utils",
+  "accelerate",
+  "decord",
   "huggingface-hub",
   "hdbscan",
   "xgrammar>=0.1.25",
@@ -133,14 +116,10 @@ default-groups = []
 conflicts = [
   [{ extra = "backbones" }, { extra = "hf448" }],
   [{ extra = "backbones" }, { extra = "hf450" }],
-  [{ extra = "backbones" }, { extra = "hf451" }],
   [{ extra = "backbones" }, { extra = "full-stack" }],
   [{ extra = "hf448" }, { extra = "hf450" }],
-  [{ extra = "hf448" }, { extra = "hf451" }],
   [{ extra = "hf448" }, { extra = "full-stack" }],
-  [{ extra = "hf450" }, { extra = "hf451" }],
   [{ extra = "hf450" }, { extra = "full-stack" }],
-  [{ extra = "hf451" }, { extra = "full-stack" }],
 ]
 
 [tool.uv.extra-build-dependencies]
@@ -155,8 +134,15 @@ where = ["src"]
 
 [tool.ruff]
 line-length = 100
+# Vendored code keeps its upstream style.
+extend-exclude = [
+  "external",
+  "src/eccbench/backbones/backend/models/external",
+  "src/eccbench/architectures/retrieval/qwen3_vl_embedding.py",
+]
 [tool.ruff.lint]
 select = ["E", "F", "I", "S102", "TID252"]
+ignore = ["E501"]
 [tool.ruff.lint.flake8-tidy-imports]
 ban-relative-imports = "parents"
 

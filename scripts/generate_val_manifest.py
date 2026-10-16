@@ -8,7 +8,7 @@ import json
 from datetime import datetime
 from pathlib import Path
 
-from substream.backbones.valset.generation import (
+from eccbench.backbones.valset.generation import (
     DEFAULT_BUCKETS,
     ValGenerationConfig,
     generate_manifest,

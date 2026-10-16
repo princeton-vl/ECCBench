@@ -5,7 +5,7 @@ from pathlib import Path
 
 import pytest
 
-from substream.data.manifest import load_patternvideos_manifest
+from eccbench.data.manifest import load_patternvideos_manifest
 
 
 def _make_manifest(tmp_path: Path) -> Path:

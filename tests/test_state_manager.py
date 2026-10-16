@@ -1,6 +1,6 @@
 """Round-trip tests for the resumable run state manager."""
 
-from substream.data.state import RunStateManager
+from eccbench.data.state import RunStateManager
 
 
 def _result(question_id: str, question_time: float) -> dict:

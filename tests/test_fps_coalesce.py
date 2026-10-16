@@ -2,7 +2,7 @@
 
 import pytest
 
-from substream.models.base import VideoLanguageModelInterface
+from eccbench.models.base import VideoLanguageModelInterface
 
 
 class _Dummy(VideoLanguageModelInterface):

@@ -2,7 +2,7 @@
 
 import pytest
 
-from substream.eval.processors.question_processor import (
+from eccbench.eval.processors.question_processor import (
     _calibration_payoff_suffix,
     _rag_preamble,
 )

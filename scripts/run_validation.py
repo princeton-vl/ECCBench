@@ -6,7 +6,7 @@ from __future__ import annotations
 import argparse
 from pathlib import Path
 
-from substream.backbones.valset.evaluator import ValidationConfig, run_validation
+from eccbench.backbones.valset.evaluator import ValidationConfig, run_validation
 
 
 def parse_args() -> argparse.Namespace:

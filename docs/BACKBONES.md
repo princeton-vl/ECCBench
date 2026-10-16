@@ -3,12 +3,12 @@
 This guide shows you how to train and evaluate the alternative-architecture
 memory backbones on the benchmark's token sequences.
 
-`substream.backbones` trains small memory architectures at matched parameter
+`eccbench.backbones` trains small memory architectures at matched parameter
 budgets. Each backbone turns a token stream into a memory representation; a
 shared transformer decoder (`MemoryBankDecoder`) answers membership or
 continuation queries against it.
 
-Select a backend (`substream.backbones.training.registries`) with
+Select a backend (`eccbench.backbones.training.registries`) with
 `--backend`:
 
 - Recurrent / state-space: `simple_rnn`, `mamba` (Mamba-2), `log_linear_mamba`
@@ -17,15 +17,15 @@ Select a backend (`substream.backbones.training.registries`) with
 - Memory-augmented: `dnc`, `stm`, `titans`, `titans_external`, `memory_mosaic`, `compressive_transformer`
 - Baselines: `identity`, `transformer_pp`
 
-`--dataset` selects `synthetic` (generated streams), `file` (manifest-backed
-streams), or `video_features` (precomputed video embeddings).
+`--dataset` selects `synthetic` (generated streams) or `file`
+(manifest-backed streams).
 
 ## Training
 
 Start with a minimal synthetic membership run:
 
 ```bash
-python -m substream.backbones.train \
+python -m eccbench.backbones.train \
   --backend mamba \
   --dataset synthetic \
   --dataset-option num_sequences=64 \
@@ -45,7 +45,7 @@ dataset knobs with `--dataset-option key=value`; `--help` lists everything.
 Evaluate a trained checkpoint against a question manifest:
 
 ```bash
-python -m substream.backbones.train --mode eval \
+python -m eccbench.backbones.train --mode eval \
   --eval-run-dir artifacts/checkpoints/<run-name> \
   --eval-manifest path/to/questions.json \
   --eval-write-csv
@@ -55,15 +55,13 @@ python -m substream.backbones.train --mode eval \
 of a manifest. `--mode benchmark` measures latency without training
 (see `--benchmark-seq-lens`). `scripts/generate_val_manifest.py` builds a
 balanced validation manifest and `scripts/run_validation.py` evaluates a
-checkpoint against it; `scripts/embed_plan.py` / `embed_shard.py` /
-`embed_mean.py` / `embed_merge.py` precompute embeddings for the
-`video_features` dataset.
+checkpoint against it.
 
 Outputs: checkpoints and `config.json` under `--checkpoint-dir` (default
 `artifacts/checkpoints/<run-name>/`); CSV/W&B logs under `--log-dir` (default
 `artifacts/logs/runs/`); evaluation summaries under `--eval-output-dir`
 (default `artifacts/logs/eval/`). The Hugging Face cache follows
-`SUBSTREAM_MODEL_CACHE` (docs/ENVIRONMENTS.md); per-run temp directories via
+`ECCBENCH_MODEL_CACHE` (docs/ENVIRONMENTS.md); per-run temp directories via
 `--temp-root`.
 
 ## Environment
@@ -74,13 +72,13 @@ environment, so install in two phases (a one-step install fails: the kernels'
 isolated build resolves its own torch):
 
 ```bash
-uv venv -p 3.11 "$SUBSTREAM_ENVS_ROOT/substream-backbones"
-export VIRTUAL_ENV="$SUBSTREAM_ENVS_ROOT/substream-backbones"
+uv venv -p 3.11 "$ECCBENCH_ENVS_ROOT/eccbench-backbones"
+export VIRTUAL_ENV="$ECCBENCH_ENVS_ROOT/eccbench-backbones"
 uv pip install "torch>=2.9,<2.10" setuptools wheel ninja packaging einops
 uv pip install --no-build-isolation causal-conv1d==1.6.1 mamba-ssm==2.3.1
 uv pip install -e ".[backbones]"
 
-bin/envctl run backbones -- python -m substream.backbones.train --help
+bin/envctl run backbones -- python -m eccbench.backbones.train --help
 ```
 
 The flash-linear backends (`deltaformer`, `deltanet`, `gated_deltanet`,
